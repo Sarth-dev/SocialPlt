@@ -35,6 +35,12 @@ public class UserController : ControllerBase
 
         return Ok(user);
     }
+    [HttpGet("engagement")]
+public async Task<IActionResult> Engagement()
+{
+    return Ok(await _userService.GetUserEngagementAsync());
+}
+
 
     [HttpPost]
     public async Task<ActionResult<User>> CreateUser(User user)

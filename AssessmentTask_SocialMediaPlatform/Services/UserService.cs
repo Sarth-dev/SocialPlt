@@ -70,4 +70,49 @@ public class UserService
     {
         return _context.Users.Any(e => e.UserID == id);
     }
+    public class UserEngagementDto
+{
+    public int UserID { get; set; }
+    public string UserName { get; set; }
+    public int EngagementScore { get; set; }
+}
+
+
+
+public async Task<List<UserEngagementDto>> GetUserEngagementAsync()
+{
+    var users = await _context.Users.ToListAsync();
+
+    var posts = await _context.Posts
+        .GroupBy(p => p.UserID)
+        .Select(g => new { UserID = g.Key, Count = g.Count() })
+        .ToListAsync();
+
+    var likes = await _context.Likes
+        .GroupBy(l => l.UserID)
+        .Select(g => new { UserID = g.Key, Count = g.Count() })
+        .ToListAsync();
+
+    var comments = await _context.Comments
+        .GroupBy(c => c.UserID)
+        .Select(g => new { UserID = g.Key, Count = g.Count() })
+        .ToListAsync();
+
+    return users.Select(u =>
+    {
+        var p = posts.FirstOrDefault(x => x.UserID == u.UserID)?.Count ?? 0;
+        var l = likes.FirstOrDefault(x => x.UserID == u.UserID)?.Count ?? 0;
+        var c = comments.FirstOrDefault(x => x.UserID == u.UserID)?.Count ?? 0;
+
+        return new UserEngagementDto
+        {
+            UserID = u.UserID,
+            UserName = u.UserName,
+            EngagementScore = (p * 5) + (l * 2) + (c * 3)
+        };
+    })
+    .OrderByDescending(x => x.EngagementScore)
+    .ToList();
+}
+
 }

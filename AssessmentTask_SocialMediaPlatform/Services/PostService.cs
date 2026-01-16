@@ -6,11 +6,15 @@ namespace Social_Media.Services;
 public class PostService
 {
     private readonly ApplicationDbContext _context;
+    private readonly ContentModerationService _moderation;
 
-    public PostService(ApplicationDbContext context)
-    {
-        _context = context;
-    }
+   public PostService(
+    ApplicationDbContext context,
+    ContentModerationService moderation)
+{
+    _context = context;
+    _moderation = moderation;
+}
 
     public async Task<IEnumerable<Post>> GetPostsAsync()
     {
@@ -23,11 +27,13 @@ public class PostService
     }
 
     public async Task<Post> CreatePostAsync(Post post)
-    {
-        _context.Posts.Add(post);
-        await _context.SaveChangesAsync();
-        return post;
-    }
+{
+    _moderation.Validate(post.Content);
+
+    _context.Posts.Add(post);
+    await _context.SaveChangesAsync();
+    return post;
+}
 
     public async Task<Post> UpdatePostAsync(Post post)
     {
@@ -65,6 +71,7 @@ public class PostService
 
         return post;
     }
+    
 
     private bool PostExists(int id)
     {
